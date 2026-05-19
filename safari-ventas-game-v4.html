@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safari Indoor - Cazadores de Ventas</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #f7f3ec;
+    --bg-2: #fdfaf4;
+    --card: #ffffff;
+    --primary: #e87a3e;
+    --primary-dark: #c25a20;
+    --accent: #5eb88f;
+    --accent-dark: #3d9670;
+    --info: #6b9bd1;
+    --text: #3d3a36;
+    --text-soft: #7a7570;
+    --border: #e5dfd4;
+    --border-soft: #f0ebe1;
+    --gold: #e8b647;
+    --silver: #a8a8a8;
+    --bronze: #c08654;
+    --danger: #d6604d;
+    --success: #5eb88f;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-hover: 0 6px 20px rgba(0,0,0,0.1);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    padding: 15px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header {
+    text-align: center;
+    padding: 22px;
+    background: var(--card);
+    border-radius: 18px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  h1 {
+    color: var(--primary);
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .subtitle { color: var(--text-soft); margin-top: 4px; font-size: 0.95em; }
+  .logout-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    padding: 8px 14px;
+    font-size: 0.82em;
+  }
+  .month-badge {
+    display: inline-block;
+    background: rgba(232,122,62,0.1);
+    color: var(--primary);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+  .sync-indicator {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    padding: 6px 12px;
+    font-size: 0.75em;
+    border-radius: 15px;
+    background: var(--bg-2);
+    color: var(--text-soft);
+  }
+  .sync-indicator.syncing { background: rgba(107,155,209,0.15); color: var(--info); }
+  .sync-indicator.error { background: rgba(214,96,77,0.15); color: var(--danger); }
+  .sync-indicator.ok { background: rgba(94,184,143,0.15); color: var(--accent-dark); }
+
+  .panel {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 {
+    color: var(--text);
+    margin-bottom: 14px;
+    font-size: 1.15em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  input, select, button {
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text);
+    font-size: 0.95em;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: var(--primary); background: white; }
+  button {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  button:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-hover); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: #b54a3a; }
+  button.secondary { background: var(--bg-2); color: var(--text); border: 1px solid var(--border); }
+  button.secondary:hover { background: var(--border-soft); color: var(--text); }
+  button.small { padding: 7px 12px; font-size: 0.82em; }
+  button.big { padding: 14px; font-size: 1.05em; width: 100%; }
+
+  /* ============ CONFIG INICIAL ============ */
+  .config-card {
+    background: var(--card);
+    max-width: 600px;
+    margin: 40px auto;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: var(--shadow-hover);
+  }
+  .config-card h2 { color: var(--primary); margin-bottom: 15px; }
+  .config-card p { margin-bottom: 12px; color: var(--text); }
+  .config-card input { width: 100%; margin: 10px 0; }
+
+  /* ============ LOGIN ============ */
+  .login-container { max-width: 480px; margin: 40px auto; }
+  .login-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: var(--shadow-hover);
+    text-align: center;
+  }
+  .login-title { color: var(--primary); font-size: 1.7em; margin-bottom: 6px; font-weight: 700; }
+  .login-subtitle { color: var(--text-soft); margin-bottom: 22px; font-size: 0.95em; }
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .user-tile {
+    background: var(--bg-2);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.92em;
+  }
+  .user-tile:hover { border-color: var(--primary); transform: translateY(-2px); background: white; }
+  .user-tile.manager { border-color: var(--accent); background: rgba(94,184,143,0.08); }
+  .user-emoji { font-size: 1.8em; display: block; margin-bottom: 4px; }
+
+  .pin-input {
+    width: 100%;
+    text-align: center;
+    font-size: 1.6em;
+    letter-spacing: 12px;
+    margin: 12px 0;
+    padding: 14px;
+    font-weight: 700;
+  }
+  .login-error { color: var(--danger); margin-top: 8px; min-height: 20px; font-size: 0.9em; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .pin-btn {
+    padding: 18px;
+    font-size: 1.4em;
+    background: var(--bg-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .pin-btn:hover { background: var(--primary); color: white; transform: none; }
+
+  /* ============ STATS CARDS ============ */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--bg-2);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid var(--border-soft);
+  }
+  .stat-card.highlight {
+    background: linear-gradient(135deg, rgba(94,184,143,0.15), rgba(94,184,143,0.05));
+    border: 1px solid var(--accent);
+  }
+  .stat-card.commission {
+    background: linear-gradient(135deg, rgba(232,122,62,0.15), rgba(232,122,62,0.05));
+    border: 1px solid var(--primary);
+  }
+  .stat-label { color: var(--text-soft); font-size: 0.8em; margin-bottom: 4px; font-weight: 500; }
+  .stat-value { color: var(--text); font-size: 1.4em; font-weight: 700; }
+  .stat-value.big { font-size: 1.8em; }
+  .stat-value.primary { color: var(--primary); }
+  .stat-value.accent { color: var(--accent-dark); }
+  .stat-sub { font-size: 0.75em; color: var(--text-soft); margin-top: 2px; }
+
+  /* ============ PROGRESS ============ */
+  .progress-section {
+    background: var(--bg-2);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-soft);
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .progress-bar { background: var(--border-soft); border-radius: 20px; height: 28px; overflow: hidden; position: relative; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    border-radius: 20px;
+    transition: width 0.8s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.85em;
+  }
+  .progress-fill.complete {
+    background: linear-gradient(90deg, var(--gold), #f4c869);
+    animation: glow 1.8s infinite;
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(232,182,71,0.4); }
+    50% { box-shadow: 0 0 22px rgba(232,182,71,0.7); }
+  }
+
+  .quick-sale { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+  @media (max-width: 500px) { .quick-sale { grid-template-columns: 1fr; } }
+
+  /* ============ RANKING ============ */
+  .ranking-list { display: flex; flex-direction: column; gap: 8px; }
+  .rank-row {
+    display: grid;
+    grid-template-columns: 50px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-2);
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+  }
+  .rank-row.me { background: rgba(232,122,62,0.08); border-color: var(--primary); }
+  .rank-row.top1 { border-left: 4px solid var(--gold); }
+  .rank-row.top2 { border-left: 4px solid var(--silver); }
+  .rank-row.top3 { border-left: 4px solid var(--bronze); }
+  .rank-position { font-size: 1.4em; text-align: center; font-weight: 700; color: var(--primary); }
+  .rank-info { min-width: 0; }
+  .rank-name { font-weight: 600; color: var(--text); font-size: 1em; }
+  .rank-progress { background: var(--border-soft); border-radius: 8px; height: 6px; margin-top: 5px; overflow: hidden; }
+  .rank-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--primary)); border-radius: 8px; }
+  .rank-amount { text-align: right; color: var(--primary); font-weight: 700; white-space: nowrap; font-size: 1em; }
+  .rank-pct { font-size: 0.75em; color: var(--text-soft); font-weight: 500; margin-top: 2px; }
+
+  /* ============ MEDALLAS ============ */
+  .medals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  .medal-card {
+    background: var(--bg-2);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid var(--border-soft);
+    position: relative;
+  }
+  .medal-card.earned {
+    background: linear-gradient(135deg, rgba(232,182,71,0.15), rgba(232,122,62,0.08));
+    border-color: var(--gold);
+  }
+  .medal-card.locked { opacity: 0.4; filter: grayscale(0.5); }
+  .medal-emoji { font-size: 2em; display: block; margin-bottom: 4px; }
+  .medal-name { font-size: 0.78em; color: var(--text); font-weight: 600; line-height: 1.2; }
+  .medal-count {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: var(--primary);
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.75em;
+    font-weight: 700;
+    min-width: 22px;
+  }
+  .medal-range { font-size: 0.7em; color: var(--text-soft); margin-top: 2px; }
+
+  /* ============ MENSAJE ============ */
+  .message-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(61,58,54,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .message-overlay.show { display: flex; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .message-box {
+    background: var(--card);
+    border-radius: 22px;
+    padding: 32px 28px;
+    max-width: 460px;
+    text-align: center;
+    animation: bounceIn 0.5s;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .message-emoji { font-size: 4em; margin-bottom: 12px; }
+  .message-title { font-size: 1.6em; color: var(--primary); margin-bottom: 12px; font-weight: 700; }
+  .message-text { font-size: 1em; color: var(--text); margin-bottom: 16px; line-height: 1.5; }
+  .message-medal {
+    background: linear-gradient(135deg, rgba(232,182,71,0.2), rgba(232,122,62,0.12));
+    border: 1px solid var(--gold);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 14px 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .message-medal-emoji { font-size: 2.2em; display: block; margin-bottom: 4px; }
+  .message-commission {
+    background: rgba(94,184,143,0.12);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    color: var(--accent-dark);
+    font-weight: 600;
+    font-size: 0.95em;
+  }
+
+  /* ============ HISTORIAL ============ */
+  .sales-list { max-height: 280px; overflow-y: auto; }
+  .sale-item {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sale-item:last-child { border-bottom: none; }
+  .sale-time { font-size: 0.82em; color: var(--text-soft); }
+  .sale-amount { color: var(--primary); font-weight: 700; }
+
+  /* ============ GERENTE ============ */
+  .manager-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 10px 16px;
+    background: var(--bg-2);
+    color: var(--text-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+  .tab-btn:hover { background: var(--border-soft); }
+  .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .seller-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 14px;
+    background: var(--bg-2);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-soft);
+  }
+  @media (max-width: 700px) {
+    .seller-row { grid-template-columns: 1fr 1fr; }
+    .seller-row .seller-name-block { grid-column: 1 / -1; }
+  }
+  .seller-name { font-weight: 700; color: var(--text); font-size: 1.05em; }
+  .seller-meta { font-size: 0.82em; color: var(--text-soft); margin-top: 2px; }
+
+  .month-selector { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+
+  .empty-state { text-align: center; padding: 28px; color: var(--text-soft); font-style: italic; }
+  .loading { text-align: center; padding: 40px; color: var(--primary); font-size: 1.1em; }
+  .loading-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .info-banner {
+    background: rgba(107,155,209,0.1);
+    border-left: 3px solid var(--info);
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 0.88em;
+    color: var(--text);
+  }
+  .info-banner.warning { background: rgba(232,182,71,0.1); border-left-color: var(--gold); }
+  .info-banner.error { background: rgba(214,96,77,0.1); border-left-color: var(--danger); }
+
+  code.url-code {
+    display: block;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+    margin: 10px 0;
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ============ PANTALLA DE CONFIGURACIÓN INICIAL ============ -->
+<div id="config-view" style="display:none;">
+  <div class="config-card">
+    <h2>⚙️ Configuración inicial</h2>
+    <div class="info-banner">
+      Para que el sistema funcione necesita conectarse a tu Google Sheets. Pega aquí la URL del Apps Script que configuraste.
+    </div>
+    <p style="font-size:0.9em; color:var(--text-soft);">La URL se ve así:</p>
+    <code class="url-code">https://script.google.com/macros/s/AKfycb.../exec</code>
+    <input type="text" id="api-url-input" placeholder="Pega aquí tu URL del Apps Script">
+    <button class="big" onclick="saveApiUrl()">Guardar y continuar</button>
+    <div style="margin-top:15px; font-size:0.85em; color:var(--text-soft);">
+      Esta URL se guarda en este dispositivo. Cada dispositivo nuevo la pedirá una sola vez.
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOADING ============ -->
+<div id="loading-view" class="loading">
+  <div class="loading-spinner"></div>
+  <div id="loading-text">Conectando con Google Sheets...</div>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="login-view" class="login-container" style="display:none;">
+  <div class="login-card">
+    <div class="login-title">🎯 Cazadores de Ventas</div>
+    <div class="login-subtitle">Safari Indoor — Selecciona tu cuenta</div>
+
+    <div id="user-list" class="user-grid"></div>
+
+    <div id="pin-screen" style="display:none;">
+      <div style="color:var(--primary); font-size:1.2em; margin-top:12px; font-weight:600;" id="pin-user-name"></div>
+      <div style="color:var(--text-soft); font-size:0.9em; margin-top:4px;">Ingresa tu PIN de 4 dígitos</div>
+      <input type="password" id="pin-input" class="pin-input" maxlength="4" inputmode="numeric" readonly>
+      <div class="pin-pad">
+        <button class="pin-btn" onclick="addPin('1')">1</button>
+        <button class="pin-btn" onclick="addPin('2')">2</button>
+        <button class="pin-btn" onclick="addPin('3')">3</button>
+        <button class="pin-btn" onclick="addPin('4')">4</button>
+        <button class="pin-btn" onclick="addPin('5')">5</button>
+        <button class="pin-btn" onclick="addPin('6')">6</button>
+        <button class="pin-btn" onclick="addPin('7')">7</button>
+        <button class="pin-btn" onclick="addPin('8')">8</button>
+        <button class="pin-btn" onclick="addPin('9')">9</button>
+        <button class="pin-btn" onclick="clearPin()">✕</button>
+        <button class="pin-btn" onclick="addPin('0')">0</button>
+        <button class="pin-btn" onclick="backPin()">⌫</button>
+      </div>
+      <div class="login-error" id="pin-error"></div>
+      <button class="secondary small" onclick="backToUserList()">← Volver</button>
+    </div>
+
+    <div id="empty-system" style="display:none; margin-top:18px;">
+      <div class="info-banner">
+        Bienvenido. Para empezar, configura tu cuenta de gerente con un PIN de 4 dígitos.
+      </div>
+      <button class="big" onclick="setupManager()">Configurar gerente</button>
+    </div>
+
+    <div style="margin-top:20px; font-size:0.8em; color:var(--text-soft);">
+      <a href="#" onclick="resetApiUrl(); return false;" style="color:var(--text-soft);">Cambiar URL del servidor</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VISTA VENDEDOR ============ -->
+<div id="seller-view" style="display:none;">
+  <div class="header">
+    <span class="sync-indicator ok" id="sync-status">✓ Sincronizado</span>
+    <button class="logout-btn danger small" onclick="logout()">Salir</button>
+    <h1 id="seller-greeting">¡Hola!</h1>
+    <div class="subtitle">Safari Indoor — Mi panel de ventas</div>
+    <div class="month-badge" id="seller-month"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📊 Mi mes</h2>
+    <div class="stats-grid">
+      <div class="stat-card highlight">
+        <div class="stat-label">Acumulado del mes</div>
+        <div class="stat-value big accent" id="my-total">$0</div>
+      </div>
+      <div class="stat-card commission">
+        <div class="stat-label">Comisión ganada</div>
+        <div class="stat-value big primary" id="my-commission">$0</div>
+        <div class="stat-sub">$100 por cada $10,000 vendidos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Meta mensual</div>
+        <div class="stat-value" id="my-goal">$0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Mi posición</div>
+        <div class="stat-value" id="my-rank">—</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <span style="color:var(--text-soft); font-weight:500;">Progreso hacia mi meta</span>
+        <span id="my-progress-text" style="color:var(--primary); font-weight:700;">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="my-progress-bar" style="width:0%">0%</div>
+      </div>
+      <div style="margin-top:8px; font-size:0.85em; color:var(--text-soft);" id="my-remaining"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>💰 Registrar venta</h2>
+    <div class="quick-sale">
+      <input type="number" id="sale-amount" placeholder="Monto en MXN" min="1" step="1">
+      <button id="sale-btn" onclick="registerSale()">Registrar</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🏅 Mis medallas</h2>
+    <div id="my-medals" class="medals-grid"></div>
+  </div>
+
+  <div class="panel">
+    <h2>🏆 Ranking del equipo</h2>
+    <div id="team-ranking" class="ranking-list"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📋 Mis ventas del mes</h2>
+    <div id="my-sales" class="sales-list"></div>
+  </div>
+</div>
+
+<!-- ============ VISTA GERENTE ============ -->
+<div id="manager-view" style="display:none;">
+  <div class="header">
+    <span class="sync-indicator ok" id="sync-status-m">✓ Sincronizado</span>
+    <button class="logout-btn danger small" onclick="logout()">Salir</button>
+    <h1>👑 Panel de Gerencia</h1>
+    <div class="subtitle">Safari Indoor — Cazadores de Ventas</div>
+    <div class="month-badge" id="manager-month"></div>
+  </div>
+
+  <div class="panel">
+    <div class="manager-tabs">
+      <button class="tab-btn active" onclick="showTab('team', event)">📊 Equipo del mes</button>
+      <button class="tab-btn" onclick="showTab('sellers', event)">👥 Vendedores</button>
+      <button class="tab-btn" onclick="showTab('history', event)">📅 Histórico</button>
+      <button class="tab-btn" onclick="showTab('settings', event)">⚙️ Configuración</button>
+    </div>
+
+    <div class="tab-content active" id="tab-team">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Vendedores activos</div>
+          <div class="stat-value" id="m-players">0</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-label">Ventas del mes</div>
+          <div class="stat-value accent" id="m-total">$0</div>
+        </div>
+        <div class="stat-card commission">
+          <div class="stat-label">Comisiones a pagar</div>
+          <div class="stat-value primary" id="m-commissions">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">% meta colectiva</div>
+          <div class="stat-value" id="m-pct">0%</div>
+        </div>
+      </div>
+      <button class="secondary small" onclick="refreshData()" style="margin: 10px 0;">🔄 Actualizar datos</button>
+      <div id="m-team-ranking" class="ranking-list" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="tab-content" id="tab-sellers">
+      <h3 style="color:var(--text); margin-bottom:10px; font-weight:600;">Agregar vendedor</h3>
+      <div class="form-grid">
+        <input type="text" id="new-name" placeholder="Nombre" maxlength="30">
+        <input type="number" id="new-pin" placeholder="PIN (4 dígitos)" maxlength="4">
+        <input type="number" id="new-goal" placeholder="Meta mensual MXN" min="100" step="100" value="100000">
+        <button onclick="addSeller()">Agregar</button>
+      </div>
+      <div class="info-banner">
+        Asigna a cada vendedor su PIN inicial. Tú lo gestionas desde aquí.
+      </div>
+
+      <h3 style="color:var(--text); margin: 22px 0 10px; font-weight:600;">Vendedores actuales</h3>
+      <div id="sellers-list"></div>
+    </div>
+
+    <div class="tab-content" id="tab-history">
+      <div class="month-selector">
+        <span style="color:var(--text-soft);">Ver mes:</span>
+        <select id="history-month-select" onchange="renderHistoryMonth()"></select>
+      </div>
+      <div id="history-content"></div>
+    </div>
+
+    <div class="tab-content" id="tab-settings">
+      <h3 style="color:var(--text); margin-bottom:10px; font-weight:600;">Cambiar PIN de gerente</h3>
+      <div class="form-grid" style="grid-template-columns: 1fr 1fr auto;">
+        <input type="password" id="current-mgr-pin" placeholder="PIN actual" maxlength="4">
+        <input type="password" id="new-mgr-pin" placeholder="Nuevo PIN" maxlength="4">
+        <button onclick="changeManagerPin()">Cambiar</button>
+      </div>
+
+      <h3 style="color:var(--text); margin: 22px 0 10px; font-weight:600;">URL del servidor</h3>
+      <div class="info-banner">
+        URL actual: <code style="font-size:0.85em;" id="current-api-url"></code>
+      </div>
+      <button class="secondary small" onclick="resetApiUrl()">Cambiar URL</button>
+
+      <h3 style="color:var(--danger); margin: 25px 0 10px; font-weight:600;">Zona de peligro</h3>
+      <div class="info-banner warning">
+        Borrar todos los datos elimina vendedores, ventas e histórico de Google Sheets. No se puede deshacer.
+      </div>
+      <button class="danger" onclick="wipeAll()">🗑️ Borrar todos los datos</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay mensajes motivadores -->
+<div id="message-overlay" class="message-overlay" onclick="closeMessage()">
+  <div class="message-box" onclick="event.stopPropagation()">
+    <div class="message-emoji" id="msg-emoji">🎯</div>
+    <div class="message-title" id="msg-title"></div>
+    <div class="message-text" id="msg-text"></div>
+    <div class="message-medal" id="msg-medal" style="display:none;">
+      <span class="message-medal-emoji" id="msg-medal-emoji"></span>
+      <div id="msg-medal-name"></div>
+    </div>
+    <div class="message-commission" id="msg-commission" style="display:none;"></div>
+    <button onclick="closeMessage()">¡A seguir!</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============ CONFIG ============
+let API_URL = localStorage.getItem('safari-api-url') || '';
+
+// ============ ESTADO ============
+let state = {
+  managerPin: null,
+  sellers: {},
+  sales: {},
+  currentMonth: null
+};
+
+let session = {
+  type: null,
+  id: null,
+  selectedUser: null,
+  pinBuffer: ''
+};
+
+// ============ MEDALLAS ============
+const MEDALS = [
+  { id: 'm1', min: 0,     max: 499,    emoji: '🌱', name: 'Semilla',
+    msgs: ['Cada peso suma, sigue así.',
+           'Buen inicio, mantén el ritmo.',
+           'Los grandes meses se hacen de ventas pequeñas también.'] },
+  { id: 'm2', min: 500,   max: 1499,   emoji: '🎯', name: 'Buen tino',
+    msgs: ['Vas tomando puntería.',
+           'Buena venta. El equipo lo nota.',
+           'Estás calentando motores.'] },
+  { id: 'm3', min: 1500,  max: 2999,   emoji: '🏹', name: 'Cazador',
+    msgs: ['Eso ya es una pieza importante.',
+           'Excelente cierre, así se hace.',
+           'Tu trabajo está dando frutos.'] },
+  { id: 'm4', min: 3000,  max: 4999,   emoji: '🦌', name: 'Cazador experto',
+    msgs: ['¡Una venta de peso!',
+           'Esto ya es nivel cazador experto.',
+           'El equipo entero te ve. Sigue así.'] },
+  { id: 'm5', min: 5000,  max: 9999,   emoji: '🐅', name: 'Caza mayor',
+    msgs: ['¡Gran venta! Estás en racha.',
+           'Esto es trabajo de cazador veterano.',
+           'Acabas de mover la aguja del mes.'] },
+  { id: 'm6', min: 10000, max: 19999,  emoji: '🦁', name: 'Rey de la sabana',
+    msgs: ['¡Venta enorme! Felicidades.',
+           'Acabas de meter una venta brutal.',
+           'Esto se cuenta en la junta del lunes.'] },
+  { id: 'm7', min: 20000, max: Infinity, emoji: '🐘', name: 'Trofeo épico',
+    msgs: ['¡Venta histórica! Esto entra al salón de la fama.',
+           '¡Increíble! Acabas de hacer historia hoy.',
+           'Esta venta se cuenta por años. ¡Felicidades!'] }
+];
+
+function getMedal(amount) { return MEDALS.find(m => amount >= m.min && amount <= m.max) || MEDALS[0]; }
+function formatRange(m) {
+  if (m.max === Infinity) return `$${m.min.toLocaleString('es-MX')}+`;
+  return `$${m.min.toLocaleString('es-MX')} - $${m.max.toLocaleString('es-MX')}`;
+}
+function calcCommission(total) { return Math.floor(total / 10000) * 100; }
+
+// ============ COMUNICACIÓN CON SHEETS ============
+function setSyncStatus(status, text) {
+  const els = document.querySelectorAll('.sync-indicator');
+  els.forEach(el => {
+    el.className = 'sync-indicator ' + status;
+    el.textContent = text;
+  });
+}
+
+async function apiCall(action, payload = {}) {
+  if (!API_URL) throw new Error('URL no configurada');
+  setSyncStatus('syncing', '⟳ Sincronizando...');
+
+  // Apps Script no acepta CORS para POST con application/json,
+  // así que usamos GET con parámetros (los datos van URL-encoded)
+  const params = new URLSearchParams({ action, ...payload });
+  const url = `${API_URL}?${params.toString()}`;
+
+  try {
+    const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const result = await response.json();
+    if (!result.ok) throw new Error(result.error || 'Error desconocido');
+    setSyncStatus('ok', '✓ Sincronizado');
+    return result.data;
+  } catch (e) {
+    setSyncStatus('error', '⚠ Error de conexión');
+    throw e;
+  }
+}
+
+async function loadState() {
+  try {
+    const data = await apiCall('load');
+    if (data) {
+      state = data;
+      if (!state.sellers) state.sellers = {};
+      if (!state.sales) state.sales = {};
+    }
+  } catch (e) {
+    console.error('Error al cargar:', e);
+    throw e;
+  }
+
+  const now = getCurrentMonth();
+  if (!state.currentMonth) state.currentMonth = now;
+  else if (state.currentMonth !== now) state.currentMonth = now;
+  if (!state.sales[state.currentMonth]) state.sales[state.currentMonth] = {};
+}
+
+async function saveState() {
+  try {
+    await apiCall('save', { data: JSON.stringify(state) });
+  } catch (e) {
+    console.error('Error al guardar:', e);
+    alert('No se pudo guardar en Google Sheets. Verifica tu conexión a internet.');
+  }
+}
+
+async function logSaleToSheet(sellerName, amount, commissionGained) {
+  try {
+    await apiCall('logSale', {
+      month: state.currentMonth,
+      seller: sellerName,
+      amount: amount,
+      commission: commissionGained
+    });
+  } catch (e) {
+    // El log es auxiliar; no romper la app si falla
+    console.warn('No se pudo registrar venta en hoja de auditoría:', e);
+  }
+}
+
+function getCurrentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function formatMonth(ym) {
+  const [y, m] = ym.split('-');
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return `${meses[parseInt(m)-1]} ${y}`;
+}
+
+// ============ CONFIG INICIAL ============
+function saveApiUrl() {
+  const url = document.getElementById('api-url-input').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    alert('La URL debe comenzar con https://script.google.com');
+    return;
+  }
+  localStorage.setItem('safari-api-url', url);
+  API_URL = url;
+  init();
+}
+
+function resetApiUrl() {
+  if (!confirm('¿Cambiar la URL del servidor? Tendrás que volver a configurarla.')) return;
+  localStorage.removeItem('safari-api-url');
+  API_URL = '';
+  location.reload();
+}
+
+// ============ LOGIN ============
+function renderLogin() {
+  const userList = document.getElementById('user-list');
+  const pinScreen = document.getElementById('pin-screen');
+  const emptySystem = document.getElementById('empty-system');
+
+  if (!state.managerPin) {
+    userList.style.display = 'none';
+    pinScreen.style.display = 'none';
+    emptySystem.style.display = 'block';
+    return;
+  }
+
+  emptySystem.style.display = 'none';
+  pinScreen.style.display = 'none';
+  userList.style.display = 'grid';
+  userList.innerHTML = '';
+
+  const mgrTile = document.createElement('div');
+  mgrTile.className = 'user-tile manager';
+  mgrTile.innerHTML = '<span class="user-emoji">👑</span>Gerente';
+  mgrTile.onclick = () => selectUser('manager', 'Gerente');
+  userList.appendChild(mgrTile);
+
+  for (const id in state.sellers) {
+    const s = state.sellers[id];
+    const tile = document.createElement('div');
+    tile.className = 'user-tile';
+    tile.innerHTML = `<span class="user-emoji">🎯</span>${s.name}`;
+    tile.onclick = () => selectUser(id, s.name);
+    userList.appendChild(tile);
+  }
+}
+
+function selectUser(id, name) {
+  session.selectedUser = id;
+  session.pinBuffer = '';
+  document.getElementById('user-list').style.display = 'none';
+  document.getElementById('pin-screen').style.display = 'block';
+  document.getElementById('pin-user-name').textContent = name;
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').textContent = '';
+}
+
+function backToUserList() {
+  session.selectedUser = null;
+  session.pinBuffer = '';
+  renderLogin();
+}
+
+function addPin(digit) {
+  if (session.pinBuffer.length >= 4) return;
+  session.pinBuffer += digit;
+  document.getElementById('pin-input').value = '•'.repeat(session.pinBuffer.length);
+  document.getElementById('pin-error').textContent = '';
+  if (session.pinBuffer.length === 4) setTimeout(verifyPin, 200);
+}
+
+function clearPin() { session.pinBuffer = ''; document.getElementById('pin-input').value = ''; }
+function backPin() {
+  session.pinBuffer = session.pinBuffer.slice(0, -1);
+  document.getElementById('pin-input').value = '•'.repeat(session.pinBuffer.length);
+}
+
+async function verifyPin() {
+  const pin = session.pinBuffer;
+  // Refrescamos estado antes de verificar para no usar datos viejos
+  try {
+    await loadState();
+  } catch (e) { /* continuamos con lo que tengamos */ }
+
+  if (session.selectedUser === 'manager') {
+    if (pin === state.managerPin) {
+      session.type = 'manager'; session.id = 'manager';
+      showManager();
+    } else {
+      document.getElementById('pin-error').textContent = 'PIN incorrecto';
+      clearPin();
+    }
+  } else {
+    const seller = state.sellers[session.selectedUser];
+    if (seller && pin === seller.pin) {
+      session.type = 'seller'; session.id = session.selectedUser;
+      showSeller();
+    } else {
+      document.getElementById('pin-error').textContent = 'PIN incorrecto';
+      clearPin();
+    }
+  }
+}
+
+async function setupManager() {
+  const pin = prompt('Crea tu PIN de gerente (4 dígitos):');
+  if (!pin || !/^\d{4}$/.test(pin)) { alert('Debe ser exactamente 4 dígitos'); return; }
+  state.managerPin = pin;
+  await saveState();
+  alert('Listo. Ya puedes iniciar sesión como gerente.');
+  renderLogin();
+}
+
+function logout() {
+  session = { type: null, id: null, selectedUser: null, pinBuffer: '' };
+  document.getElementById('seller-view').style.display = 'none';
+  document.getElementById('manager-view').style.display = 'none';
+  document.getElementById('login-view').style.display = 'block';
+  renderLogin();
+}
+
+// ============ VENDEDOR ============
+function showSeller() {
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('manager-view').style.display = 'none';
+  document.getElementById('seller-view').style.display = 'block';
+  renderSeller();
+}
+
+function getSellerTotal(sellerId, month) {
+  const monthSales = state.sales[month] || {};
+  const sales = monthSales[sellerId] || [];
+  return sales.reduce((s, x) => s + x.amount, 0);
+}
+
+function renderSeller() {
+  const me = state.sellers[session.id];
+  if (!me) { logout(); return; }
+
+  document.getElementById('seller-greeting').textContent = `¡Hola, ${me.name}! 🎯`;
+  document.getElementById('seller-month').textContent = '📅 ' + formatMonth(state.currentMonth);
+
+  const myTotal = getSellerTotal(session.id, state.currentMonth);
+  const mySales = (state.sales[state.currentMonth] || {})[session.id] || [];
+  const commission = calcCommission(myTotal);
+
+  document.getElementById('my-total').textContent = '$' + myTotal.toLocaleString('es-MX');
+  document.getElementById('my-commission').textContent = '$' + commission.toLocaleString('es-MX');
+  document.getElementById('my-goal').textContent = '$' + me.monthlyGoal.toLocaleString('es-MX');
+
+  const pct = Math.min((myTotal / me.monthlyGoal) * 100, 100);
+  const bar = document.getElementById('my-progress-bar');
+  bar.style.width = pct + '%';
+  bar.textContent = pct.toFixed(1) + '%';
+  bar.className = 'progress-fill' + (pct >= 100 ? ' complete' : '');
+  document.getElementById('my-progress-text').textContent = pct.toFixed(1) + '%';
+
+  const remaining = me.monthlyGoal - myTotal;
+  if (remaining > 0) {
+    document.getElementById('my-remaining').textContent = `Te faltan $${remaining.toLocaleString('es-MX')} para cumplir tu meta.`;
+  } else {
+    document.getElementById('my-remaining').textContent = `¡Meta cumplida! Llevas $${Math.abs(remaining).toLocaleString('es-MX')} de excedente.`;
+  }
+
+  renderRanking('team-ranking', true);
+
+  const ranking = getRanking();
+  const myRank = ranking.findIndex(r => r.id === session.id) + 1;
+  document.getElementById('my-rank').textContent = myRank > 0 ? `${myRank}°` : '—';
+
+  renderMyMedals(me);
+
+  const salesList = document.getElementById('my-sales');
+  if (mySales.length === 0) {
+    salesList.innerHTML = '<div class="empty-state">Aún no registras ventas este mes</div>';
+  } else {
+    salesList.innerHTML = [...mySales].reverse().map(s => {
+      const d = new Date(s.time);
+      const time = d.toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      const med = getMedal(s.amount);
+      return `<div class="sale-item">
+        <span class="sale-time">${med.emoji} ${time}</span>
+        <span class="sale-amount">$${s.amount.toLocaleString('es-MX')}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderMyMedals(me) {
+  const container = document.getElementById('my-medals');
+  const medals = me.medals || {};
+  container.innerHTML = MEDALS.map(m => {
+    const count = medals[m.id] || 0;
+    const earned = count > 0;
+    return `
+      <div class="medal-card ${earned ? 'earned' : 'locked'}">
+        ${earned ? `<div class="medal-count">×${count}</div>` : ''}
+        <span class="medal-emoji">${m.emoji}</span>
+        <div class="medal-name">${m.name}</div>
+        <div class="medal-range">${formatRange(m)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function getRanking() {
+  return Object.entries(state.sellers)
+    .map(([id, s]) => ({
+      id, name: s.name,
+      total: getSellerTotal(id, state.currentMonth),
+      goal: s.monthlyGoal
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+function renderRanking(containerId, highlightMe = false) {
+  const container = document.getElementById(containerId);
+  const ranking = getRanking();
+  if (ranking.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sin vendedores aún</div>';
+    return;
+  }
+  container.innerHTML = ranking.map((r, i) => {
+    const pct = Math.min((r.total / r.goal) * 100, 100);
+    const medals = ['🥇','🥈','🥉'];
+    const pos = i < 3 ? medals[i] : `${i+1}°`;
+    const topClass = i < 3 ? `top${i+1}` : '';
+    const meClass = (highlightMe && r.id === session.id) ? 'me' : '';
+    return `
+      <div class="rank-row ${topClass} ${meClass}">
+        <div class="rank-position">${pos}</div>
+        <div class="rank-info">
+          <div class="rank-name">${r.name}</div>
+          <div class="rank-progress"><div class="rank-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="rank-amount">
+          $${r.total.toLocaleString('es-MX')}
+          <div class="rank-pct">${pct.toFixed(0)}% meta</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function registerSale() {
+  const btn = document.getElementById('sale-btn');
+  const amount = parseFloat(document.getElementById('sale-amount').value);
+  if (!amount || amount < 1) { alert('Monto inválido'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  // Refrescamos antes para no sobreescribir cambios de otros usuarios
+  try {
+    await loadState();
+  } catch (e) {
+    alert('Error de conexión. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = 'Registrar';
+    return;
+  }
+
+  const month = state.currentMonth;
+  if (!state.sales[month]) state.sales[month] = {};
+  if (!state.sales[month][session.id]) state.sales[month][session.id] = [];
+
+  const me = state.sellers[session.id];
+  if (!me) { alert('Tu cuenta ya no existe'); logout(); return; }
+  if (!me.medals) me.medals = {};
+
+  const totalBefore = getSellerTotal(session.id, month);
+  const commissionBefore = calcCommission(totalBefore);
+
+  state.sales[month][session.id].push({ amount, time: Date.now() });
+
+  const totalAfter = totalBefore + amount;
+  const commissionAfter = calcCommission(totalAfter);
+  const commissionGained = commissionAfter - commissionBefore;
+
+  const medal = getMedal(amount);
+  me.medals[medal.id] = (me.medals[medal.id] || 0) + 1;
+
+  const justReachedGoal = totalBefore < me.monthlyGoal && totalAfter >= me.monthlyGoal;
+
+  document.getElementById('sale-amount').value = '';
+  await saveState();
+  logSaleToSheet(me.name, amount, commissionGained); // fire-and-forget
+  renderSeller();
+
+  btn.disabled = false;
+  btn.textContent = 'Registrar';
+
+  if (justReachedGoal) {
+    showMessage('🎉', `¡Meta cumplida, ${me.name}!`,
+      `Acabas de alcanzar tu meta mensual de $${me.monthlyGoal.toLocaleString('es-MX')}. Llevas $${totalAfter.toLocaleString('es-MX')} y todo lo que vendas de aquí en adelante es excedente.`,
+      medal,
+      commissionGained > 0 ? `+$${commissionGained.toLocaleString('es-MX')} de comisión por esta venta (total: $${commissionAfter.toLocaleString('es-MX')})` : null
+    );
+  } else {
+    const msg = medal.msgs[Math.floor(Math.random() * medal.msgs.length)];
+    const pct = (totalAfter / me.monthlyGoal) * 100;
+    showMessage(medal.emoji, '¡Venta registrada!',
+      `${me.name}, registraste $${amount.toLocaleString('es-MX')}. ${msg} Llevas $${totalAfter.toLocaleString('es-MX')} de $${me.monthlyGoal.toLocaleString('es-MX')} (${pct.toFixed(1)}%).`,
+      medal,
+      commissionGained > 0 ? `+$${commissionGained.toLocaleString('es-MX')} de comisión por esta venta (total: $${commissionAfter.toLocaleString('es-MX')})` : `Sigue sumando — completas otro bloque de comisión cada $10,000 vendidos.`
+    );
+  }
+}
+
+function showMessage(emoji, title, text, medal, commissionText) {
+  document.getElementById('msg-emoji').textContent = emoji;
+  document.getElementById('msg-title').textContent = title;
+  document.getElementById('msg-text').textContent = text;
+
+  const medalEl = document.getElementById('msg-medal');
+  if (medal) {
+    document.getElementById('msg-medal-emoji').textContent = medal.emoji;
+    document.getElementById('msg-medal-name').innerHTML = `Ganaste medalla <strong>${medal.name}</strong>`;
+    medalEl.style.display = 'block';
+  } else {
+    medalEl.style.display = 'none';
+  }
+
+  const commEl = document.getElementById('msg-commission');
+  if (commissionText) {
+    commEl.textContent = '💰 ' + commissionText;
+    commEl.style.display = 'block';
+  } else {
+    commEl.style.display = 'none';
+  }
+
+  document.getElementById('message-overlay').classList.add('show');
+}
+
+function closeMessage() { document.getElementById('message-overlay').classList.remove('show'); }
+
+// ============ GERENTE ============
+function showManager() {
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('seller-view').style.display = 'none';
+  document.getElementById('manager-view').style.display = 'block';
+  renderManager();
+}
+
+function showTab(name, ev) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  ev.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'history') renderHistoryMonths();
+  if (name === 'settings') document.getElementById('current-api-url').textContent = API_URL;
+}
+
+async function refreshData() {
+  try {
+    await loadState();
+    renderManager();
+  } catch (e) { alert('Error al refrescar: ' + e.message); }
+}
+
+function renderManager() {
+  document.getElementById('manager-month').textContent = '📅 ' + formatMonth(state.currentMonth);
+
+  const ranking = getRanking();
+  const totalSold = ranking.reduce((s, r) => s + r.total, 0);
+  const totalGoal = ranking.reduce((s, r) => s + r.goal, 0);
+  const pct = totalGoal > 0 ? (totalSold / totalGoal) * 100 : 0;
+  const totalCommissions = ranking.reduce((s, r) => s + calcCommission(r.total), 0);
+
+  document.getElementById('m-players').textContent = ranking.length;
+  document.getElementById('m-total').textContent = '$' + totalSold.toLocaleString('es-MX');
+  document.getElementById('m-commissions').textContent = '$' + totalCommissions.toLocaleString('es-MX');
+  document.getElementById('m-pct').textContent = pct.toFixed(1) + '%';
+
+  renderRanking('m-team-ranking');
+  renderSellersList();
+}
+
+function renderSellersList() {
+  const list = document.getElementById('sellers-list');
+  const sellers = Object.entries(state.sellers);
+  if (sellers.length === 0) {
+    list.innerHTML = '<div class="empty-state">Aún no hay vendedores. Agrega al primero arriba.</div>';
+    return;
+  }
+  list.innerHTML = sellers.map(([id, s]) => {
+    const total = getSellerTotal(id, state.currentMonth);
+    const comm = calcCommission(total);
+    return `
+      <div class="seller-row">
+        <div class="seller-name-block">
+          <div class="seller-name">${s.name}</div>
+          <div class="seller-meta">PIN: ${s.pin} · Meta: $${s.monthlyGoal.toLocaleString('es-MX')} · Vendido: $${total.toLocaleString('es-MX')} · Comisión: $${comm.toLocaleString('es-MX')}</div>
+        </div>
+        <button class="small secondary" onclick="editGoal('${id}')">Meta</button>
+        <button class="small secondary" onclick="editPin('${id}')">PIN</button>
+        <button class="small secondary" onclick="editName('${id}')">Nombre</button>
+        <button class="small danger" onclick="removeSeller('${id}')">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function addSeller() {
+  const name = document.getElementById('new-name').value.trim();
+  const pin = document.getElementById('new-pin').value.trim();
+  const goal = parseFloat(document.getElementById('new-goal').value);
+
+  if (!name) { alert('Escribe un nombre'); return; }
+  if (!/^\d{4}$/.test(pin)) { alert('El PIN debe ser 4 dígitos'); return; }
+  if (!goal || goal < 100) { alert('Meta inválida'); return; }
+
+  await loadState();
+  const id = 'sel_' + Date.now();
+  state.sellers[id] = { name, pin, monthlyGoal: goal, medals: {} };
+
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-pin').value = '';
+  document.getElementById('new-goal').value = '100000';
+
+  await saveState();
+  renderManager();
+}
+
+async function editGoal(id) {
+  const s = state.sellers[id];
+  const v = prompt(`Nueva meta mensual para ${s.name}:`, s.monthlyGoal);
+  if (!v) return;
+  const g = parseFloat(v);
+  if (!g || g < 100) { alert('Meta inválida'); return; }
+  s.monthlyGoal = g;
+  await saveState();
+  renderManager();
+}
+
+async function editPin(id) {
+  const s = state.sellers[id];
+  const v = prompt(`Nuevo PIN para ${s.name} (4 dígitos):`, s.pin);
+  if (!v) return;
+  if (!/^\d{4}$/.test(v)) { alert('PIN debe ser 4 dígitos'); return; }
+  s.pin = v;
+  await saveState();
+  renderManager();
+}
+
+async function editName(id) {
+  const s = state.sellers[id];
+  const v = prompt(`Nuevo nombre:`, s.name);
+  if (!v || !v.trim()) return;
+  s.name = v.trim();
+  await saveState();
+  renderManager();
+}
+
+async function removeSeller(id) {
+  const s = state.sellers[id];
+  if (!confirm(`¿Eliminar a ${s.name}? Sus ventas del mes quedan en el histórico.`)) return;
+  delete state.sellers[id];
+  await saveState();
+  renderManager();
+}
+
+function renderHistoryMonths() {
+  const sel = document.getElementById('history-month-select');
+  const months = Object.keys(state.sales).sort().reverse();
+  if (months.length === 0) {
+    sel.innerHTML = '<option>Sin datos</option>';
+    document.getElementById('history-content').innerHTML = '<div class="empty-state">Aún no hay histórico</div>';
+    return;
+  }
+  sel.innerHTML = months.map(m => `<option value="${m}">${formatMonth(m)}</option>`).join('');
+  renderHistoryMonth();
+}
+
+function renderHistoryMonth() {
+  const month = document.getElementById('history-month-select').value;
+  if (!month || !state.sales[month]) return;
+
+  const monthData = state.sales[month];
+  const rows = Object.entries(monthData).map(([sellerId, sales]) => {
+    const seller = state.sellers[sellerId];
+    const name = seller ? seller.name : '(eliminado)';
+    const total = sales.reduce((s, x) => s + x.amount, 0);
+    return { name, total, count: sales.length, commission: calcCommission(total) };
+  }).sort((a, b) => b.total - a.total);
+
+  if (rows.length === 0) {
+    document.getElementById('history-content').innerHTML = '<div class="empty-state">Sin ventas en este mes</div>';
+    return;
+  }
+
+  const grandTotal = rows.reduce((s, r) => s + r.total, 0);
+  const grandCount = rows.reduce((s, r) => s + r.count, 0);
+  const grandComm = rows.reduce((s, r) => s + r.commission, 0);
+
+  document.getElementById('history-content').innerHTML = `
+    <div class="stats-grid" style="margin-bottom:14px;">
+      <div class="stat-card highlight">
+        <div class="stat-label">Total vendido</div>
+        <div class="stat-value accent">$${grandTotal.toLocaleString('es-MX')}</div>
+      </div>
+      <div class="stat-card commission">
+        <div class="stat-label">Comisiones pagadas</div>
+        <div class="stat-value primary">$${grandComm.toLocaleString('es-MX')}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Operaciones</div>
+        <div class="stat-value">${grandCount}</div>
+      </div>
+    </div>
+    <div class="ranking-list">
+      ${rows.map((r, i) => {
+        const medals = ['🥇','🥈','🥉'];
+        const pos = i < 3 ? medals[i] : `${i+1}°`;
+        const topClass = i < 3 ? `top${i+1}` : '';
+        return `
+          <div class="rank-row ${topClass}">
+            <div class="rank-position">${pos}</div>
+            <div class="rank-info">
+              <div class="rank-name">${r.name}</div>
+              <div class="seller-meta">${r.count} ventas · Comisión: $${r.commission.toLocaleString('es-MX')}</div>
+            </div>
+            <div class="rank-amount">$${r.total.toLocaleString('es-MX')}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function changeManagerPin() {
+  const cur = document.getElementById('current-mgr-pin').value;
+  const newP = document.getElementById('new-mgr-pin').value;
+  if (cur !== state.managerPin) { alert('PIN actual incorrecto'); return; }
+  if (!/^\d{4}$/.test(newP)) { alert('Nuevo PIN debe ser 4 dígitos'); return; }
+  state.managerPin = newP;
+  await saveState();
+  document.getElementById('current-mgr-pin').value = '';
+  document.getElementById('new-mgr-pin').value = '';
+  alert('PIN cambiado correctamente');
+}
+
+async function wipeAll() {
+  if (!confirm('¿Borrar TODO? Esto elimina vendedores, ventas e histórico de Google Sheets. No se puede deshacer.')) return;
+  if (!confirm('¿Estás completamente seguro? Última oportunidad.')) return;
+  state = { managerPin: null, sellers: {}, sales: {}, currentMonth: getCurrentMonth() };
+  await saveState();
+  logout();
+}
+
+// ============ INIT ============
+async function init() {
+  document.getElementById('config-view').style.display = 'none';
+  document.getElementById('login-view').style.display = 'none';
+  document.getElementById('loading-view').style.display = 'block';
+
+  if (!API_URL) {
+    document.getElementById('loading-view').style.display = 'none';
+    document.getElementById('config-view').style.display = 'block';
+    return;
+  }
+
+  try {
+    await loadState();
+    document.getElementById('loading-view').style.display = 'none';
+    document.getElementById('login-view').style.display = 'block';
+    renderLogin();
+  } catch (e) {
+    document.getElementById('loading-text').innerHTML = `
+      <div style="color:var(--danger); margin-bottom:10px;">⚠ No se pudo conectar</div>
+      <div style="font-size:0.85em; color:var(--text-soft);">${e.message}</div>
+      <div style="margin-top:15px;">
+        <button class="small" onclick="location.reload()">Reintentar</button>
+        <button class="small secondary" onclick="resetApiUrl()">Cambiar URL</button>
+      </div>
+    `;
+  }
+}
+
+document.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && document.activeElement.id === 'sale-amount') registerSale();
+});
+
+init();
+</script>
+</body>
+</html>
