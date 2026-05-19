@@ -472,23 +472,6 @@
 <body>
 <div class="container">
 
-<!-- ============ PANTALLA DE CONFIGURACIÓN INICIAL ============ -->
-<div id="config-view" style="display:none;">
-  <div class="config-card">
-    <h2>⚙️ Configuración inicial</h2>
-    <div class="info-banner">
-      Para que el sistema funcione necesita conectarse a tu Google Sheets. Pega aquí la URL del Apps Script que configuraste.
-    </div>
-    <p style="font-size:0.9em; color:var(--text-soft);">La URL se ve así:</p>
-    <code class="url-code">https://script.google.com/macros/s/AKfycb.../exec</code>
-    <input type="text" id="api-url-input" placeholder="Pega aquí tu URL del Apps Script">
-    <button class="big" onclick="saveApiUrl()">Guardar y continuar</button>
-    <div style="margin-top:15px; font-size:0.85em; color:var(--text-soft);">
-      Esta URL se guarda en este dispositivo. Cada dispositivo nuevo la pedirá una sola vez.
-    </div>
-  </div>
-</div>
-
 <!-- ============ LOADING ============ -->
 <div id="loading-view" class="loading">
   <div class="loading-spinner"></div>
@@ -530,10 +513,6 @@
         Bienvenido. Para empezar, configura tu cuenta de gerente con un PIN de 4 dígitos.
       </div>
       <button class="big" onclick="setupManager()">Configurar gerente</button>
-    </div>
-
-    <div style="margin-top:20px; font-size:0.8em; color:var(--text-soft);">
-      <a href="#" onclick="resetApiUrl(); return false;" style="color:var(--text-soft);">Cambiar URL del servidor</a>
     </div>
   </div>
 </div>
@@ -679,11 +658,10 @@
         <button onclick="changeManagerPin()">Cambiar</button>
       </div>
 
-      <h3 style="color:var(--text); margin: 22px 0 10px; font-weight:600;">URL del servidor</h3>
+      <h3 style="color:var(--text); margin: 22px 0 10px; font-weight:600;">Servidor</h3>
       <div class="info-banner">
-        URL actual: <code style="font-size:0.85em;" id="current-api-url"></code>
+        Conectado a Google Sheets. Los datos se sincronizan automáticamente.
       </div>
-      <button class="secondary small" onclick="resetApiUrl()">Cambiar URL</button>
 
       <h3 style="color:var(--danger); margin: 25px 0 10px; font-weight:600;">Zona de peligro</h3>
       <div class="info-banner warning">
@@ -713,7 +691,8 @@
 
 <script>
 // ============ CONFIG ============
-let API_URL = localStorage.getItem('safari-api-url') || '';
+// URL del Apps Script integrada (no requiere configuración por usuario)
+const API_URL = 'https://script.google.com/macros/s/AKfycbzfFIoRPrhB4_dadqQ4GN5-RTy0-Y2yIgVwSBl8Z73Yy8MadoCreRyw84s102T6n1pn/exec';
 
 // ============ ESTADO ============
 let state = {
@@ -850,25 +829,6 @@ function formatMonth(ym) {
   const [y, m] = ym.split('-');
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   return `${meses[parseInt(m)-1]} ${y}`;
-}
-
-// ============ CONFIG INICIAL ============
-function saveApiUrl() {
-  const url = document.getElementById('api-url-input').value.trim();
-  if (!url || !url.startsWith('https://script.google.com')) {
-    alert('La URL debe comenzar con https://script.google.com');
-    return;
-  }
-  localStorage.setItem('safari-api-url', url);
-  API_URL = url;
-  init();
-}
-
-function resetApiUrl() {
-  if (!confirm('¿Cambiar la URL del servidor? Tendrás que volver a configurarla.')) return;
-  localStorage.removeItem('safari-api-url');
-  API_URL = '';
-  location.reload();
 }
 
 // ============ LOGIN ============
@@ -1208,7 +1168,6 @@ function showTab(name, ev) {
   ev.target.classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
   if (name === 'history') renderHistoryMonths();
-  if (name === 'settings') document.getElementById('current-api-url').textContent = API_URL;
 }
 
 async function refreshData() {
@@ -1410,15 +1369,8 @@ async function wipeAll() {
 
 // ============ INIT ============
 async function init() {
-  document.getElementById('config-view').style.display = 'none';
   document.getElementById('login-view').style.display = 'none';
   document.getElementById('loading-view').style.display = 'block';
-
-  if (!API_URL) {
-    document.getElementById('loading-view').style.display = 'none';
-    document.getElementById('config-view').style.display = 'block';
-    return;
-  }
 
   try {
     await loadState();
@@ -1427,11 +1379,13 @@ async function init() {
     renderLogin();
   } catch (e) {
     document.getElementById('loading-text').innerHTML = `
-      <div style="color:var(--danger); margin-bottom:10px;">⚠ No se pudo conectar</div>
+      <div style="color:var(--danger); margin-bottom:10px;">⚠ No se pudo conectar al servidor</div>
       <div style="font-size:0.85em; color:var(--text-soft);">${e.message}</div>
       <div style="margin-top:15px;">
         <button class="small" onclick="location.reload()">Reintentar</button>
-        <button class="small secondary" onclick="resetApiUrl()">Cambiar URL</button>
+      </div>
+      <div style="margin-top:15px; font-size:0.8em; color:var(--text-soft);">
+        Si el problema persiste, contacta a la gerencia.
       </div>
     `;
   }
