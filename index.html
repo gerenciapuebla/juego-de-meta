@@ -535,10 +535,22 @@ function setSyncStatus(status, text){
 async function apiCall(action, payload = {}){
   if (!API_URL) throw new Error('URL no configurada');
   setSyncStatus('syncing', '⟳ Sincronizando…');
-  // Apps Script no admite CORS para POST con JSON: usamos GET con parámetros.
-  const url = `${API_URL}?${new URLSearchParams({ action, ...payload })}`;
+  // Carga  → GET simple (URL corta, nunca hay problema de longitud).
+  // Guardado → POST con el JSON en el cuerpo, evita el límite de URL.
+  // Apps Script acepta text/plain en doPost sin problema de CORS.
+  let res;
   try {
-    const res = await fetch(url, { method:'GET', redirect:'follow' });
+    if (action === 'save') {
+      res = await fetch(API_URL + '?action=save', {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: payload.data
+      });
+    } else {
+      const url = API_URL + '?' + new URLSearchParams({ action, ...payload });
+      res = await fetch(url, { method: 'GET', redirect: 'follow' });
+    }
     const result = await res.json();
     if (!result.ok) throw new Error(result.error || 'Error desconocido');
     setSyncStatus('ok', '✓ Sincronizado');
