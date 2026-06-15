@@ -473,7 +473,7 @@
 /* ============ HELPERS ============ */
 const $  = id => document.getElementById(id);
 const fmt = n => '$' + Math.round(n).toLocaleString('es-MX');
-const uid = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -485,8 +485,16 @@ function toast(msg, isErr){
   clearTimeout(toast._t); toast._t=setTimeout(()=>t.className='', 3200);
 }
 
-/* ============ CONFIG ============ */
-let API_URL = localStorage.getItem('safari-api-url') || '';
+/* ============ CONFIG ============
+   ┌─────────────────────────────────────────────────────────────────────┐
+   │  👉 PEGA AQUÍ la URL de tu Apps Script, entre las comillas, y guarda. │
+   │  Con esto CUALQUIER dispositivo que abra la página funciona solo,     │
+   │  sin pedir configuración. Déjala vacía ('') para pedirla por equipo.  │
+   │  Ej: 'https://script.google.com/macros/s/AKfycb.../exec'              │
+   └─────────────────────────────────────────────────────────────────────┘ */
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzfFIoRPrhB4_dadqQ4GN5-RTy0-Y2yIgVwSBl8Z73Yy8MadoCreRyw84s102T6n1pn/exec';
+
+let API_URL = localStorage.getItem('safari-api-url') || DEFAULT_API_URL;
 
 /* ============ ESTADO ============ */
 let state   = { managerPin:null, sellers:{}, sales:{}, currentMonth:null };
@@ -546,11 +554,11 @@ async function apiLoad(){
   const data = await apiCall('load');
   if (data) {
     state = data;
-    state.sellers ||= {};
-    state.sales   ||= {};
+    if (!state.sellers) state.sellers = {};
+    if (!state.sales)   state.sales = {};
   }
   state.currentMonth = getCurrentMonth();          // siempre el mes en curso
-  state.sales[state.currentMonth] ||= {};
+  if (!state.sales[state.currentMonth]) state.sales[state.currentMonth] = {};
 }
 const apiSave = () => apiCall('save', { data: JSON.stringify(state) });
 
@@ -757,14 +765,14 @@ function renderRanking(containerId, highlightMe = false){
 
 /* ---- Aplica una venta al estado (idempotente: dedup por id) ---- */
 function applySale(month, sellerId, sale){
-  state.sales[month] ||= {};
-  state.sales[month][sellerId] ||= [];
+  if (!state.sales[month]) state.sales[month] = {};
+  if (!state.sales[month][sellerId]) state.sales[month][sellerId] = [];
   const arr = state.sales[month][sellerId];
   if (arr.some(s => s.id === sale.id)) return false;   // ya estaba
   arr.push(sale);
   const seller = state.sellers[sellerId];
   if (seller) {
-    seller.medals ||= {};
+    if (!seller.medals) seller.medals = {};
     const med = getMedal(sale.amount);
     seller.medals[med.id] = (seller.medals[med.id] || 0) + 1;
   }
@@ -784,15 +792,16 @@ async function flush(){
       const saved = pending.filter(p => savingIds.includes(p.sale.id));
       pending = pending.filter(p => !savingIds.includes(p.sale.id));
       saved.forEach(p => {
-        const name = state.sellers[p.sellerId]?.name || '—';
-        logSaleToSheet(name, p.sale.amount, p.sale.commission || 0);
+        const sl = state.sellers[p.sellerId];
+        logSaleToSheet((sl && sl.name) || '—', p.sale.amount, p.commission || 0);
       });
       rerenderCurrent();                                 // refleja la verdad ya fusionada
     }
     setSyncStatus('ok', '✓ Sincronizado');
   } catch (e) {
     console.error('Sync falló:', e);
-    setSyncStatus('error', `⚠ ${pending.length} sin guardar — toca para reintentar`);
+    setSyncStatus('error', '⚠ ' + pending.length + ' sin guardar — toca para reintentar');
+    toast('No se guardó en Sheets: ' + e.message, true);  // motivo real visible
     flushing = false;
     setTimeout(flush, 4000);   // reintento automático; las ventas siguen visibles y a salvo
     return;
@@ -824,8 +833,10 @@ async function registerSale(){
   const commissionGained = commissionAfter - calcCommission(totalBefore);
 
   // Venta optimista: se aplica YA y se confirma en segundo plano.
-  const sale = { id: uid(), amount, time: Date.now(), commission: commissionGained };
-  pending.push({ month, sellerId: session.id, sale });
+  // El objeto que se persiste queda mínimo {id, amount, time}; la comisión
+  // viaja sólo en el "pending" para el log de auditoría (no engorda el guardado).
+  const sale = { id: uid(), amount, time: Date.now() };
+  pending.push({ month, sellerId: session.id, sale, commission: commissionGained });
   applySale(month, session.id, sale);
 
   input.value = '';
@@ -1105,7 +1116,7 @@ document.addEventListener('click', e => {
 
 // Enter para registrar; teclado físico para el PIN
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.activeElement?.id === 'sale-amount') { registerSale(); return; }
+  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'sale-amount') { registerSale(); return; }
   if ($('pin-screen') && !$('pin-screen').hidden) {
     if (/^\d$/.test(e.key)) addPin(e.key);
     else if (e.key === 'Backspace') backPin();
